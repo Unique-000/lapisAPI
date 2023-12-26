@@ -7,11 +7,7 @@ const mongoose = require('mongoose/');
 const Note = require('./models/productModel')
 const app = express();
 app.use(express.json())
-app.use(cors({
-    origin: ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3002', 'lapisnotes.netlify.app'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,  // enable set cookie
-  }));
+app.use(cors());
 // get 10 notes starting from the given date
 app.get('/browse-notes/:date', async (req, res) => {
     try {
