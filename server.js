@@ -25,12 +25,12 @@ app.get('/browse-notes/:date', async (req, res) => {
         const notes = await Note.find(
             {
                 createdAt: {
-                    $lte: parsedDate,
+                    $gt: parsedDate,
                 }
             },
-            // Specify the fields to retrieve ('title' and 'content')
             'title content createdAt'
-        ).limit(10); // Limit the result to 10 notes
+        ).limit(10);
+        
 
         res.status(200).json(notes);
     } catch (error) {
