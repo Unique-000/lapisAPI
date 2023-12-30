@@ -9,12 +9,12 @@ const app = express();
 app.use(express.json())
 app.use(cors());
 // get 10 notes starting from the given date
-app.get('/browse-notes/:date', async (req, res) => {
+app.get('/browse-notes/:date?', async (req, res) => {
     try {
         const { date } = req.params;
 
         // Parse the date string to a Date object
-        const parsedDate = new Date(date);
+        const parsedDate = date ? new Date(date) : new Date();
 
         if (isNaN(parsedDate.getTime())) {
             // Invalid date format
@@ -25,19 +25,19 @@ app.get('/browse-notes/:date', async (req, res) => {
         const notes = await Note.find(
             {
                 createdAt: {
-                    $gt: parsedDate,
+                    $lt: parsedDate,
                 }
             },
             'title content createdAt'
-        ).limit(10);
-        
+        ).limit(10).sort({ createdAt: -1 }); // Sort by createdAt in descending order
 
-        res.status(200).json(notes);
+        res.status(200).json(notes || 'There is no notes matching your request!');
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 });
+
 
 // get specific note by title (every title is/should be unique) 
 app.get('/note/:title', async (req, res) => {
