@@ -8,38 +8,52 @@ const Note = require('./models/productModel')
 const app = express();
 app.use(express.json())
 app.use(cors());
-// get 10 notes starting from the given date
-app.get('/browse-notes/:date?', async (req, res) => {
+
+app.get('/browse-notes/:byWhat/:value?', async (req, res) => {
     try {
-        const { date } = req.params;
+      const { byWhat, value } = req.params;
+  
+      if (byWhat === 'date') {
+        const parsedDate = value ? new Date(value) : new Date();
 
-        // Parse the date string to a Date object
-        const parsedDate = date ? new Date(date) : new Date();
-
+        console.log('Parsed Date:', parsedDate);
+    
         if (isNaN(parsedDate.getTime())) {
-            // Invalid date format
-            return res.status(400).json({ message: 'Invalid date format' });
+          return res.status(400).json({ message: 'Invalid date format' });
         }
-
-        // Use the 'select' method to specify the fields you want to retrieve
+    
         const notes = await Note.find(
-            {
-                createdAt: {
-                    $lt: parsedDate,
-                }
-            },
-            'title content createdAt'
-        ).limit(10).sort({ createdAt: -1 }); // Sort by createdAt in descending order
-
-        res.status(200).json(notes || 'There is no notes matching your request!');
+          {
+            createdAt: {
+              $lt: parsedDate,
+            }
+          },
+          'title content createdAt'
+        ).limit(10).sort({ createdAt: -1 });
+    
+        console.log('Notes:', notes);
+        return res.status(200).json(notes || 'There are no notes matching your request!');
+      
+      } else if (byWhat === 'title') {
+        const notes = await Note.find(
+          {
+            title: {
+              $regex: new RegExp(value, 'i'),
+            }
+          },
+          'title content createdAt'
+        ).limit(10).sort({ createdAt: -1 });
+  
+        return res.status(200).json(notes || 'There are no notes matching your request!');
+      } else {
+        return res.status(400).json({ message: 'Invalid byWhat parameter' });
+      }
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ message: 'Internal Server Error' });
+      console.error(error.message);
+      res.status(500).json({ message: 'Internal Server Error' });
     }
-});
-
-
-// get specific note by title (every title is/should be unique) 
+  });
+  
 app.get('/note/:title', async (req, res) => {
     try {
         const {title} = req.params;
